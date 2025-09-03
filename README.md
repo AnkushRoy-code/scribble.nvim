@@ -169,3 +169,4 @@ It's all chil out here. Feel free to contribute
 # Related Projects
 
 - [scratchpad.nvim](https://github.com/athar-qadri/scratchpad.nvim)
+- [snacks.nvim (scratch)](https://github.com/folke/snacks.nvim/blob/main/docs/scratch.md)
