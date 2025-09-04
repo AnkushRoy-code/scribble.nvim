@@ -104,8 +104,31 @@ end
 function M.pick()
 	populate_file_list()
 	local picker = config.options.picker or resolve_provider()
+
 	if picker == "fzf" then
+		-- https://github.com/ibhagwan/fzf-lua/wiki/Advanced#neovim-builtin-preview
 		local fzf = require("fzf-lua")
+		local builtin = require("fzf-lua.previewer.builtin")
+
+		-- Inherit from the "buffer_or_file" previewer
+		local MyPreviewer = builtin.buffer_or_file:extend()
+
+		function MyPreviewer:new(o, opts, fzf_win)
+			MyPreviewer.super.new(self, o, opts, fzf_win)
+			setmetatable(self, MyPreviewer)
+			return self
+		end
+
+		function MyPreviewer:parse_entry(entry_str)
+			-- Assume an arbitrary entry in the format of 'file:line'
+			local path = map[entry_str]
+			return {
+				path = path,
+				line = 1,
+				col = 1,
+			}
+		end
+
 		fzf.fzf_exec(dfiles, {
 			prompt = "Select a File > ",
 			actions = {
@@ -115,7 +138,11 @@ function M.pick()
 						{ buf = vim.api.nvim_get_current_buf() })
 				end,
 			},
-		})
+			previewer = MyPreviewer,
+			fzf_opts = {
+				['--preview-window'] = 'right:60%,wrap,hidden'
+			},
+		}, 'files')
 
 		-- https://github.com/kawre/leetcode.nvim/blob/master/lua/leetcode/picker/question/snacks.lua
 	elseif picker == "snacks" then
@@ -132,6 +159,7 @@ function M.pick()
 		end
 
 		snacks_picker.pick({
+			-- source = snacks_items,
 			items = snacks_items,
 
 			format = function(item)
